@@ -1,0 +1,2 @@
+a=input("Enter number 1=")
+b=input("Enter number 2=")
