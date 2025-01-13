@@ -1,1 +1,94 @@
-BIT a chat bot
+import pyautogui
+import pyperclip
+import time
+import openai
+import pygetwindow as gw
+import pyperclip
+import os
+
+# Initialize OpenAI API
+openai.api_key = 'your-openai-api-key'  # Replace with your OpenAI API key
+
+# Function to open the chat application (e.g., Chrome with chat app open)
+def open_chat_app():
+    try:
+        # Assuming Chrome is installed, adjust this command based on your system and app
+        os.system("start chrome")  # For Windows
+        time.sleep(3)
+    except Exception as e:
+        print(f"Error opening Chrome: {e}")
+
+# Function to retrieve chat history (simplified)
+def retrieve_chat_history():
+    try:
+        # Use pyautogui to highlight the chat history and copy it to clipboard
+        pyautogui.hotkey('ctrl', 'a')  # Select all text
+        time.sleep(0.5)
+        pyautogui.hotkey('ctrl', 'c')  # Copy to clipboard
+        time.sleep(0.5)
+        
+        chat_history = pyperclip.paste()  # Retrieve copied text from clipboard
+        return chat_history
+    except Exception as e:
+        print(f"Error retrieving chat history: {e}")
+        return ""
+
+# Function to analyze the last message from a target user
+def analyze_last_message(chat_history, target_user="Rohan Das"):
+    try:
+        messages = chat_history.split('\n')  # Split by new line to separate messages
+        for message in reversed(messages):  # Start from the last message
+            if message.startswith(target_user + ":"):
+                return message[len(target_user) + 1:].strip()  # Get message excluding the user name
+        return None
+    except Exception as e:
+        print(f"Error analyzing chat history: {e}")
+        return None
+
+# Function to send the chat history to OpenAI for a humorous response
+def generate_response(prompt):
+    try:
+        response = openai.Completion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a humorous assistant who roasts people in a funny way."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return response['choices'][0]['message']['content']
+    except Exception as e:
+        print(f"Error generating response: {e}")
+        return "I couldn't come up with something funny right now."
+
+# Function to send the generated response back to the chat app
+def send_response_to_chat(response):
+    try:
+        # Use pyautogui to focus on the input area and send the response
+        pyautogui.click(x=100, y=100)  # Adjust the coordinates based on where your chat input is
+        pyautogui.typewrite(response)
+        pyautogui.press('enter')
+    except Exception as e:
+        print(f"Error sending response: {e}")
+
+# Main function that drives the chatbot interaction
+def auto_reply_chatbot():
+    open_chat_app()  # Open the chat application
+    time.sleep(5)  # Wait for the chat app to load
+
+    while True:
+        chat_history = retrieve_chat_history()
+        
+        if chat_history:
+            last_message = analyze_last_message(chat_history)
+            if last_message:
+                print(f"Last message: {last_message}")
+                prompt = f"Roast this message: {last_message}"
+                response = generate_response(prompt)
+                print(f"Response: {response}")
+                send_response_to_chat(response)
+        
+        # Wait before checking again
+        time.sleep(5)
+
+# Start the Auto-Reply Chatbot
+auto_reply_chatbot()
